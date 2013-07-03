@@ -17,7 +17,8 @@ module InstanceSelector
         instances = @fog.describe_instances({"instance-state-name" => "running"}.merge(filters))
         instances.body['reservationSet'].inject({}) do |memo, i|
           instance = i['instancesSet'][0]
-          memo[instance['dnsName']] = instance['tagSet']['Name']
+          key = instance['dnsName'].empty? ? instance['ipAddress'] : instance['dnsName']
+          memo[key] = instance['tagSet']['Name']
           memo
         end
       end
@@ -37,6 +38,18 @@ module InstanceSelector
               Please create a .fog file or set AWS_ACCESS_KEY_ID and AWS_ACCESS_KEY_ID
             EOS
           end
+        end
+      end
+
+      def args_to_filters(args)
+        filters = {}
+        filters.merge! parse_tags(args[:tags])
+      end
+
+      def parse_tags(tags)
+        tags.inject({}) do |memo, tag|
+          memo["tag:#{tag[0]}"] = tag[1]
+          memo
         end
       end
 

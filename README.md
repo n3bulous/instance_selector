@@ -42,14 +42,12 @@ http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-Describ
 
 ## TODO
 
-- :filters (e.g., :filters => {"instance-state-name" => nil to clear the running instance filter})
-
+- Tests
+- filters (e.g., :filters => {"instance-state-name" => nil to clear the running instance filter})
 - AWS
   - ELB support
     - attach/detach
     - selecting all instances in an ELB
-
-
 
 ## Contributing
 
