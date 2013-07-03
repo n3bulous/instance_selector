@@ -28,7 +28,7 @@ By default, only running instances will be included in the results.  Overriding 
 ### Standalone
 
     require 'instance_selector/connection'
-    conn = InstanceSelector::Connection.new(:aws)
+    conn = InstanceSelector::Connection.factory(:aws)
     instances = connection.instances(:tags => {"Environment" => "staging"})
 
 ### With Capistrano
