@@ -1,11 +1,15 @@
 # InstanceSelector
 
-A simple interface for querying DNS names cloud hosting environments based on searching cloud meta data.  It also provides a liberal Capistrano interface for identifying deploy targets.
+Remove the configuration pain when deploying to cloud servers.
 
-Currently supporting:
+When deploying applications with Capistrano, you need to itemize the servers for each role.  When you only have a server or two, this is easily managed. However, if you have many servers provisioned via a CM tool, keeping track of them becomes difficult.
 
-- AWS
-  - ec2 instance filtering
+By tagging servers with some meta data when they are created, you can filter
+the server list to only the ones pertaining to the current deploy.
+
+## Status
+
+Currently, only EC2 instances are supported.
 
 ## Installation
 
@@ -29,12 +33,12 @@ By default, only running instances will be included in the results.  Overriding 
 
     require 'instance_selector/connection'
     conn = InstanceSelector::Connection.factory(:aws)
-    instances = connection.instances(:tags => {"Environment" => "staging"})
+    instances = connection.instances(:tags => {"Environment" => "staging", "Role" => "web"})
 
 ### With Capistrano
 
     require 'instance_selector/capistrano'
-    instance_selector :app, :aws, :tags => {"Environment" => "staging"}
+    instance_selector :app, :aws, :tags => {"Environment" => "staging", "Role" => "web"}
 
 ### Filters
 
