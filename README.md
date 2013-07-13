@@ -40,6 +40,17 @@ By default, only running instances will be included in the results.  Overriding 
     require 'instance_selector/capistrano'
     instance_selector :app, :aws, :tags => {"Environment" => "staging", "Role" => "web"}
 
+### Generic with Capistrano
+
+    # Centralized instance selector config
+    on :after, only: stages do
+      @logger.log 1, "Selecting instances from the cloud"
+      instance_selector :app, :aws, tags: {"Environment" => stage, "Role" => "social-web"}
+      instance_selector :sidekiq, :aws, tags: {"Environment" => stage, "Role" => "social-sidekiq"}
+      # NOTE: Only one cron host is supported! Tag appropriately.
+      instance_selector :cron, :aws, tags: {"Environment" => stage, "CronRole" => "social-web"}
+    end
+
 ### Filters
 
 http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeInstances.html
