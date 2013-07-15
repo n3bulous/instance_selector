@@ -35,7 +35,7 @@ module InstanceSelector
           unless @fog
             abort <<-EOS
               Could not authenticate with AWS.
-              Please create a .fog file or set AWS_ACCESS_KEY_ID and AWS_ACCESS_KEY_ID
+              Please create a .fog file or set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
             EOS
           end
         end
