@@ -15,10 +15,17 @@ module InstanceSelector
 
       def instances(filters={})
         instances = @fog.describe_instances({"instance-state-name" => "running"}.merge(filters))
+
         instances.body['reservationSet'].inject({}) do |memo, i|
-          instance = i['instancesSet'][0]
-          key = instance['dnsName'].empty? ? instance['ipAddress'] : instance['dnsName']
-          memo[key] = instance['tagSet']['Name']
+
+          # Each instancesSet can have multiple instances
+          # Odd, but explains why it's plural.
+          i['instancesSet'].each do |instance|
+            # instance = i['instancesSet'][0]
+            key = instance['dnsName'].empty? ? instance['ipAddress'] : instance['dnsName']
+            memo[key] = instance['tagSet']['Name']
+          end
+
           memo
         end
       end

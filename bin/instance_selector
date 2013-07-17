@@ -17,7 +17,6 @@ if opts[:e] && opts[:r]
 
   client = InstanceSelector::Connection.factory(:aws)
   instances = client.instances(filters)
-
   instances.each {|i| puts i[0]}
 else
   puts opts
