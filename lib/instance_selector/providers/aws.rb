@@ -13,11 +13,9 @@ module InstanceSelector
         end
       end
 
-      def instances(filters={})
-        instances = @fog.describe_instances({"instance-state-name" => "running"}.merge(filters))
 
-        instances.body['reservationSet'].inject({}) do |memo, i|
-
+      def dns_from_instance_reservation_set(reservation_set)
+        reservation_set.inject({}) do |memo, i|
           # Each instancesSet can have multiple instances
           # Odd, but explains why it's plural.
           i['instancesSet'].each do |instance|
@@ -28,6 +26,32 @@ module InstanceSelector
 
           memo
         end
+      end
+
+      def on_demand_instances(filters={})
+        instances = @fog.describe_instances({"instance-state-name" => "running"}.merge(filters))
+
+        dns_from_instance_reservation_set instances.body['reservationSet']
+      end
+
+      def spot_instances(filters={})
+        requests = @fog.describe_spot_instance_requests({'state' => 'active'}.merge(filters))
+        requests.body['spotInstanceRequestSet'].inject({}) do |memo, req|
+
+          if req['instanceId'] && !req['instanceId'].empty?
+            instances = @fog.describe_instances('instance-id' => req['instanceId'])
+            memo.merge! dns_from_instance_reservation_set(instances.body['reservationSet'])
+          end
+
+          memo
+        end
+      end
+
+
+      def instances(filters={})
+        on_demand = on_demand_instances(filters)
+        spot = spot_instances(filters)
+        on_demand.merge(spot)
       end
 
       def connect
