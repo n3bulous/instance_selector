@@ -8,16 +8,34 @@ opts = Slop.parse do
 
   on 'e=', 'environment=', "The environment servers are tagged with"
   on 'r=', 'role=', "The role servers are tagged with"
+  # on 't', 'tag-spots', "If the spot instances aren't tagged, update them"
+  on 'v', 'verbose', "Print more info about the instances"
 end
 
-if opts[:e] && opts[:r]
-  filters = {}
-  filters["tag:Role"] = opts[:r]
-  filters["tag:Environment"] = opts[:e]
+filters = {}
+filters["tag:Role"] = opts[:r] if opts[:r]
+filters["tag:Environment"] = opts[:e] if opts[:e]
 
-  client = InstanceSelector::Connection.factory(:aws)
-  instances = client.instances(filters)
-  instances.each {|i| puts i[0]}
-else
+unless opts[:e] || opts[:r]
   puts opts
+  exit 1
+end
+
+client = InstanceSelector::Connection.factory(:aws)
+instances = client.instances(filters)
+
+instances.each do |i|
+  print i[0]
+  print "\t"        if (opts[:v] && (i[0].size+1) % 8 < 1)
+  print "\t" + i[1] if opts[:v]
+  print "\n"
+
+  # TODO: Convert instances to an object to associate more data with it, and move tagging to method in providers
+  # if opts[:t] && i[1].nil? && i[1] != ""
+  #   tags = {}
+  #   tags["Role"] = opts[:r] if opts[:r]
+  #   tags["Environment"] = opts[:e] if opts[:e]
+  #   tags["Name"] = "#{opts[:e]}-#{opts[:r]}"
+  #   client.tag
+  # end
 end
