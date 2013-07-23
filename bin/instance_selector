@@ -26,8 +26,11 @@ instances = client.instances(filters)
 
 instances.each do |k,v|
   print k
-  print "\t"        if (opts[:v] && (k.size+1) % 8 < 1)
-  print "\t" + v[:name] + "\t" + v[:instance_id] if opts[:v]
+  if opts[:v]
+    print "\t" if (k.size+1) % 8 < 1
+    print "\t" + (v[:name] || "\t")
+    print "\t" + v[:instance_id] if v[:instance_id]
+  end
   print "\n"
 
   # TODO: Convert instances to an object to associate more data with it, and move tagging to method in providers
