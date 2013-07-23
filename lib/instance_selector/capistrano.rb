@@ -16,7 +16,7 @@ Capistrano::Configuration.instance(:must_exist).load do
   desc "List all cloud instances for a stage"
   task :instance_selector_list do
     puts
-    @instance_selector_instances.sort_by {|k,v| v[:name]}.each do |k, v|
+    @instance_selector_instances.sort_by {|k,v| v[:name].to_s}.each do |k, v|
       puts k + "\t" + v.values.join("\t")
     end
   end
