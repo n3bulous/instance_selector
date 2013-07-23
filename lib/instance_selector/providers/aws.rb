@@ -19,9 +19,8 @@ module InstanceSelector
           # Each instancesSet can have multiple instances
           # Odd, but explains why it's plural.
           i['instancesSet'].each do |instance|
-            # instance = i['instancesSet'][0]
             key = instance['dnsName'].empty? ? instance['ipAddress'] : instance['dnsName']
-            memo[key] = instance['tagSet']['Name']
+            memo[key] = {name: instance['tagSet']['Name'], instance_id: instance['instanceId']}
           end
 
           memo
@@ -49,9 +48,7 @@ module InstanceSelector
 
 
       def instances(filters={})
-        on_demand = on_demand_instances(filters)
-        spot = spot_instances(filters)
-        on_demand.merge(spot)
+        on_demand_instances(filters).merge(spot_instances(filters))
       end
 
       def connect

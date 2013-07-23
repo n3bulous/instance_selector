@@ -24,10 +24,10 @@ end
 client = InstanceSelector::Connection.factory(:aws)
 instances = client.instances(filters)
 
-instances.each do |i|
-  print i[0]
-  print "\t"        if (opts[:v] && (i[0].size+1) % 8 < 1)
-  print "\t" + i[1] if opts[:v]
+instances.each do |k,v|
+  print k
+  print "\t"        if (opts[:v] && (k.size+1) % 8 < 1)
+  print "\t" + v[:name] + "\t" + v[:instance_id] if opts[:v]
   print "\n"
 
   # TODO: Convert instances to an object to associate more data with it, and move tagging to method in providers
