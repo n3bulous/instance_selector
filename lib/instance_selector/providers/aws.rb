@@ -72,9 +72,16 @@ module InstanceSelector
       def args_to_filters(args)
         filters = {}
         filters.merge! parse_tags(args[:tags])
+        filters.merge! parse_spot_request_id(args[:spot_request_id])
+      end
+
+      def parse_spot_request_id(spot_request_id)
+        return {} unless spot_request_id
+        { "spot-instance-request-id" => spot_request_id }
       end
 
       def parse_tags(tags)
+        return {} unless tags
         tags.inject({}) do |memo, tag|
           memo["tag:#{tag[0]}"] = tag[1]
           memo

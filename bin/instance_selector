@@ -8,6 +8,7 @@ opts = Slop.parse do
 
   on 'e=', 'environment=', "The environment servers are tagged with"
   on 'r=', 'role=', "The role servers are tagged with"
+  on 's=', 'spot-request-id=', "A spot request id"
   # on 't', 'tag-spots', "If the spot instances aren't tagged, update them"
   on 'v', 'verbose', "Print more info about the instances"
 end
@@ -15,8 +16,9 @@ end
 filters = {}
 filters["tag:Role"] = opts[:r] if opts[:r]
 filters["tag:Environment"] = opts[:e] if opts[:e]
+filters["spot-instance-request-id"] = opts[:s] if opts[:s]
 
-unless opts[:e] || opts[:r]
+unless opts[:e] || opts[:r] || opts[:s]
   puts opts
   exit 1
 end
