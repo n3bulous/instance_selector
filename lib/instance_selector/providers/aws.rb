@@ -19,7 +19,8 @@ module InstanceSelector
           # Each instancesSet can have multiple instances
           # Odd, but explains why it's plural.
           i['instancesSet'].each do |instance|
-            key = instance['dnsName'].empty? ? instance['ipAddress'] : instance['dnsName']
+            key = instance['dnsName'] || instance['ipAddress'] || instance['privateIpAddress']
+
             memo[key] = {name: instance['tagSet']['Name'], instance_id: instance['instanceId']}
           end
 

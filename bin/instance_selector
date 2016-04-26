@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'slop'
-require 'instance_selector'
+
+require File.expand_path(File.join(File.dirname(__FILE__),
+                         '..', 'lib', 'instance_selector'))
 
 opts = Slop.parse do
   banner "Usage: ./instance_selector <options>"
@@ -14,8 +16,19 @@ opts = Slop.parse do
 end
 
 filters = {}
-filters["tag:Role"] = opts[:r] if opts[:r]
-filters["tag:Environment"] = opts[:e] if opts[:e]
+
+if opts[:r]
+  role_parts = opts[:r].split('=')
+  role_key, role_val = role_parts.size == 2 ? role_parts : ["Role", role_parts[0]]
+  filters["tag:#{role_key}"] = role_val if opts[:r]
+end
+
+if opts[:e]
+  env_parts = opts[:e].split('=')
+  env_key, env_val = env_parts.size == 2 ? env_parts : ["Environment", env_parts[0]]
+  filters["tag:#{env_key}"] = env_val if opts[:e]
+end
+
 filters["spot-instance-request-id"] = opts[:s] if opts[:s]
 
 unless opts[:e] || opts[:r] || opts[:s]
