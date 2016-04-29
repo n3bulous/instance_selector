@@ -48,8 +48,12 @@ module InstanceSelector
       end
 
 
-      def instances(filters={})
-        on_demand_instances(filters).merge(spot_instances(filters))
+      def instances(args={})
+        first_only = args.delete(:first_only)
+        filters = args_to_filters(args)
+        instances = on_demand_instances(filters).merge(spot_instances(filters))
+
+        first_only ? Hash[*instances.first] : instances
       end
 
       def connect
