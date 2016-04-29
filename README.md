@@ -2,7 +2,7 @@
 
 Remove the configuration pain when deploying to cloud servers.
 
-When deploying applications with Capistrano, you need to itemize the servers for each role.  When you only have a server or two, this is easily managed. However, if you have many servers provisioned via a CM tool, keeping track of them becomes difficult.
+When deploying applications with Capistrano, you need to itemize the servers for each role.  When you only have a server or two this is easily managed, but keeping track of them becomes difficult if you have many servers provisioned via a CM tool or autoscaling.
 
 By tagging servers with some meta data when they are created, you can filter
 the server list to only the ones pertaining to the current deploy.
@@ -15,7 +15,7 @@ Currently, only EC2 instances are supported.
 
 Add this line to your application's Gemfile:
 
-    gem 'instance_selector'
+    gem 'instance_selector', require: false
 
 And then execute:
 
@@ -45,10 +45,10 @@ By default, only running instances will be included in the results.  Overriding 
     # Centralized instance selector config
     on :after, only: stages do
       @logger.log 1, "Selecting instances from the cloud"
-      instance_selector :app, :aws, tags: {"Environment" => stage, "Role" => "social-web"}
-      instance_selector :sidekiq, :aws, tags: {"Environment" => stage, "Role" => "social-sidekiq"}
+      instance_selector :app, :aws, tags: {"Environment" => stage, "Role" => "web"}
+      instance_selector :sidekiq, :aws, tags: {"Environment" => stage, "Role" => "sidekiq"}
       # NOTE: Only one cron host is supported! Tag appropriately.
-      instance_selector :cron, :aws, tags: {"Environment" => stage, "CronRole" => "social-web"}
+      instance_selector :cron, :aws, tags: {"Environment" => stage, "CronRole" => "web"}
     end
 
 ### Filters
@@ -71,25 +71,3 @@ http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-Describ
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-
-## License
-
-Copyright (c) 2013 Kevin McFadden
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
