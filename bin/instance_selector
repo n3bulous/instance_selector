@@ -1,37 +1,59 @@
 #!/usr/bin/env ruby
 
 require 'slop'
-require 'instance_selector'
+
+require File.expand_path(File.join(File.dirname(__FILE__),
+                         '..', 'lib', 'instance_selector'))
 
 opts = Slop.parse do
   banner "Usage: ./instance_selector <options>"
 
   on 'e=', 'environment=', "The environment servers are tagged with"
+  on 'f', 'first-only', "Return only the first record"
   on 'r=', 'role=', "The role servers are tagged with"
   on 's=', 'spot-request-id=', "A spot request id"
   # on 't', 'tag-spots', "If the spot instances aren't tagged, update them"
   on 'v', 'verbose', "Print more info about the instances"
 end
 
-filters = {}
-filters["tag:Role"] = opts[:r] if opts[:r]
-filters["tag:Environment"] = opts[:e] if opts[:e]
-filters["spot-instance-request-id"] = opts[:s] if opts[:s]
+tags = {}
+
+if opts[:r]
+  role_parts = opts[:r].split('=')
+  role_key, role_val = role_parts.size == 2 ? role_parts : ["Role", role_parts[0]]
+  tags[role_key] = role_val
+end
+
+if opts[:e]
+  env_parts = opts[:e].split('=')
+  env_key, env_val = env_parts.size == 2 ? env_parts : ["Environment", env_parts[0]]
+  tags[env_key] = env_val
+end
+
+
+
+spot_instance_request_id = opts[:s] if opts[:s]
+first_only = true if opts[:f]
 
 unless opts[:e] || opts[:r] || opts[:s]
   puts opts
   exit 1
 end
 
+args = { tags: tags,
+         first_only: first_only,
+         "spot-instance-request-id" => spot_instance_request_id }
+
 client = InstanceSelector::Connection.factory(:aws)
-instances = client.instances(filters)
+instances = client.instances(args)
 
 instances.each do |k,v|
   print k
   if opts[:v]
-    print "\t" if (k.size+1) % 8 < 1
-    print "\t" + (v[:name] || "\t")
-    print "\t" + v[:instance_id] if v[:instance_id]
+    puts "\t#{v.inspect}"
+    # print "\t" if (k.size+1) % 8 < 1
+    # print "\t" + (v[:name] || "\t")
+    # print "\t" + v[:instance_id] if v[:instance_id]
   end
   print "\n"
 

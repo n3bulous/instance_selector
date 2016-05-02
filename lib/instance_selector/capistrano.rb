@@ -5,9 +5,10 @@ Capistrano::Configuration.instance(:must_exist).load do
   @instance_selector_instances = {}
 
   def instance_selector(cap_role, provider, args={})
+    role_options = args.delete(:role_options) || {}
     client = InstanceSelector::Connection.factory(provider)
-    instances = client.instances(client.args_to_filters(args))
-    role(cap_role, *instances.keys)
+    instances = client.instances(args)
+    role(cap_role, *instances.keys, role_options)
 
     @instance_selector_instances.merge!(instances)
   end
