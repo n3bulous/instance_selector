@@ -42,13 +42,12 @@ By default, only running instances will be included in the results.  Overriding 
     # Assign all web servers to the app role
     instance_selector :app, :aws, :tags => {"Environment" => "staging", "Role" => "web"}
 
-    # assign the first returned instance tagged with the cron role to the database
-    # for migration purposes
+    # an exception is thrown if exactly one instance is not returned
     instance_selector :db,
                       :aws,
                       :tags => {"Environment" => "staging", "Role" => "cron"},
                       role_options: { primary: true },
-                      first_only: true
+                      expect_count: 1
 
 ### Generic with Capistrano
 

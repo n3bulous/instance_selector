@@ -1,18 +1,17 @@
 module InstanceSelector
   module Providers
     class AWS
-      def initialize(options={})
+      def initialize(options = {})
         @fog = options.delete(:fog_client)
 
         unless @fog
           @options = {
-            region: 'us-east-1',
+            region: 'us-east-1'
           }.merge(options)
 
           connect
         end
       end
-
 
       def dns_from_instance_reservation_set(reservation_set)
         reservation_set.inject({}) do |memo, i|
@@ -21,23 +20,22 @@ module InstanceSelector
           i['instancesSet'].each do |instance|
             key = instance['dnsName'] || instance['ipAddress'] || instance['privateIpAddress']
 
-            memo[key] = {name: instance['tagSet']['Name'], instance_id: instance['instanceId']}
+            memo[key] = { name: instance['tagSet']['Name'], instance_id: instance['instanceId'] }
           end
 
           memo
         end
       end
 
-      def on_demand_instances(filters={})
-        instances = @fog.describe_instances({"instance-state-name" => "running"}.merge(filters))
+      def on_demand_instances(filters = {})
+        instances = @fog.describe_instances({ "instance-state-name" => "running" }.merge(filters))
 
         dns_from_instance_reservation_set instances.body['reservationSet']
       end
 
-      def spot_instances(filters={})
-        requests = @fog.describe_spot_instance_requests({'state' => 'active'}.merge(filters))
+      def spot_instances(filters = {})
+        requests = @fog.describe_spot_instance_requests({ 'state' => 'active' }.merge(filters))
         requests.body['spotInstanceRequestSet'].inject({}) do |memo, req|
-
           if req['instanceId'] && !req['instanceId'].empty?
             instances = @fog.describe_instances('instance-id' => req['instanceId'])
             memo.merge! dns_from_instance_reservation_set(instances.body['reservationSet'])
@@ -47,30 +45,31 @@ module InstanceSelector
         end
       end
 
-
-      def instances(args={})
-        first_only = args.delete(:first_only)
+      def instances(args = {})
+        expect_count = args.delete(:expect_count)
         filters = args_to_filters(args)
         instances = on_demand_instances(filters).merge(spot_instances(filters))
 
-        first_only ? Hash[*instances.first] : instances
+        if expect_count && expect_count != instances.size
+          raise UnexpectedInstanceCount, "Expected #{expect_count}, got #{instances.size}"
+        end
+
+        instances
       end
 
       def connect
-        begin
-          @fog = Fog::Compute.new(provider:              'AWS',
-                                  region:                @options[:region],
-                                  aws_access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
-                                  aws_secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'])
-        rescue
-          @fog = Fog::Compute.new(provider: 'AWS', region: @options[:region])
-        ensure
-          unless @fog
-            abort <<-EOS
-              Could not authenticate with AWS.
-              Please create a .fog file or set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-            EOS
-          end
+        @fog = Fog::Compute.new(provider:              'AWS',
+                                region:                @options[:region],
+                                aws_access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
+                                aws_secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'])
+      rescue
+        @fog = Fog::Compute.new(provider: 'AWS', region: @options[:region])
+      ensure
+        unless @fog
+          abort <<-EOS
+            Could not authenticate with AWS.
+            Please create a .fog file or set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+          EOS
         end
       end
 
@@ -92,7 +91,6 @@ module InstanceSelector
           memo
         end
       end
-
     end
   end
 end

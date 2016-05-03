@@ -8,8 +8,9 @@ require File.expand_path(File.join(File.dirname(__FILE__),
 opts = Slop.parse do
   banner "Usage: ./instance_selector <options>"
 
+  on 'c=', 'expect-count=', "Generate an error if unexpected number of instances are returned"
   on 'e=', 'environment=', "The environment servers are tagged with"
-  on 'f', 'first-only', "Return only the first record"
+
   on 'r=', 'role=', "The role servers are tagged with"
   on 's=', 'spot-request-id=', "A spot request id"
   # on 't', 'tag-spots', "If the spot instances aren't tagged, update them"
@@ -30,10 +31,8 @@ if opts[:e]
   tags[env_key] = env_val
 end
 
-
-
-spot_instance_request_id = opts[:s] if opts[:s]
-first_only = true if opts[:f]
+spot_instance_request_id = opts[:s]
+expect_count = opts[:c].to_i if opts[:c]
 
 unless opts[:e] || opts[:r] || opts[:s]
   puts opts
@@ -41,7 +40,7 @@ unless opts[:e] || opts[:r] || opts[:s]
 end
 
 args = { tags: tags,
-         first_only: first_only,
+         expect_count: expect_count,
          "spot-instance-request-id" => spot_instance_request_id }
 
 client = InstanceSelector::Connection.factory(:aws)
