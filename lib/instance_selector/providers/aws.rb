@@ -1,6 +1,7 @@
 module InstanceSelector
   module Providers
-    class AWS
+    # AWS Provider
+    class AWS < AbstractProvider
       def initialize(options = {})
         @fog = options.delete(:fog_client)
 
@@ -10,38 +11,6 @@ module InstanceSelector
           }.merge(options)
 
           connect
-        end
-      end
-
-      def dns_from_instance_reservation_set(reservation_set)
-        reservation_set.inject({}) do |memo, i|
-          # Each instancesSet can have multiple instances
-          # Odd, but explains why it's plural.
-          i['instancesSet'].each do |instance|
-            key = instance['dnsName'] || instance['ipAddress'] || instance['privateIpAddress']
-
-            memo[key] = { name: instance['tagSet']['Name'], instance_id: instance['instanceId'] }
-          end
-
-          memo
-        end
-      end
-
-      def on_demand_instances(filters = {})
-        instances = @fog.describe_instances({ "instance-state-name" => "running" }.merge(filters))
-
-        dns_from_instance_reservation_set instances.body['reservationSet']
-      end
-
-      def spot_instances(filters = {})
-        requests = @fog.describe_spot_instance_requests({ 'state' => 'active' }.merge(filters))
-        requests.body['spotInstanceRequestSet'].inject({}) do |memo, req|
-          if req['instanceId'] && !req['instanceId'].empty?
-            instances = @fog.describe_instances('instance-id' => req['instanceId'])
-            memo.merge! dns_from_instance_reservation_set(instances.body['reservationSet'])
-          end
-
-          memo
         end
       end
 
@@ -55,6 +24,37 @@ module InstanceSelector
         end
 
         instances
+      end
+
+      private
+
+      def dns_from_instance_reservation_set(reservation_set)
+        reservation_set.each_with_object({}) do |i, memo|
+          # Each instancesSet can have multiple instances
+          # Odd, but explains why it's plural.
+          i['instancesSet'].each do |instance|
+            key = instance['dnsName'] || instance['ipAddress'] || instance['privateIpAddress']
+
+            memo[key] = { name: instance['tagSet']['Name'],
+                          identifier: instance['instanceId'] }
+          end
+        end
+      end
+
+      def on_demand_instances(filters = {})
+        instances = @fog.describe_instances({ 'instance-state-name' => 'running' }.merge(filters))
+
+        dns_from_instance_reservation_set instances.body['reservationSet']
+      end
+
+      def spot_instances(filters = {})
+        requests = @fog.describe_spot_instance_requests({ 'state' => 'active' }.merge(filters))
+        requests.body['spotInstanceRequestSet'].each_with_object({}) do |req, memo|
+          if req['instanceId'] && !req['instanceId'].empty?
+            instances = @fog.describe_instances('instance-id' => req['instanceId'])
+            memo.merge! dns_from_instance_reservation_set(instances.body['reservationSet'])
+          end
+        end
       end
 
       def connect
@@ -81,14 +81,13 @@ module InstanceSelector
 
       def parse_spot_request_id(spot_request_id)
         return {} unless spot_request_id
-        { "spot-instance-request-id" => spot_request_id }
+        { 'spot-instance-request-id' => spot_request_id }
       end
 
       def parse_tags(tags)
         return {} unless tags
-        tags.inject({}) do |memo, tag|
+        tags.each_with_object({}) do |tag, memo|
           memo["tag:#{tag[0]}"] = tag[1]
-          memo
         end
       end
     end

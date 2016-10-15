@@ -3,31 +3,35 @@
 require 'slop'
 
 require File.expand_path(File.join(File.dirname(__FILE__),
-                         '..', 'lib', 'instance_selector'))
+                                   '..', 'lib', 'instance_selector'))
 
 opts = Slop.parse do
-  banner "Usage: ./instance_selector <options>"
+  banner 'Usage: ./instance_selector <options>'
 
-  on 'c=', 'expect-count=', "Generate an error if unexpected number of instances are returned"
-  on 'e=', 'environment=', "The environment servers are tagged with"
+  on 'c=',
+     'expect-count=',
+     'Generate an error if unexpected number of instances are returned'
+  on 'e=',
+     'environment=',
+     'The environment servers are tagged with'
 
-  on 'r=', 'role=', "The role servers are tagged with"
-  on 's=', 'spot-request-id=', "A spot request id"
+  on 'r=', 'role=', 'The role servers are tagged with'
+  on 's=', 'spot-request-id=', 'A spot request id'
   # on 't', 'tag-spots', "If the spot instances aren't tagged, update them"
-  on 'v', 'verbose', "Print more info about the instances"
+  on 'v', 'verbose', 'Print more info about the instances'
 end
 
 tags = {}
 
 if opts[:r]
   role_parts = opts[:r].split('=')
-  role_key, role_val = role_parts.size == 2 ? role_parts : ["Role", role_parts[0]]
+  role_key, role_val = role_parts.size == 2 ? role_parts : ['Role', role_parts[0]]
   tags[role_key] = role_val
 end
 
 if opts[:e]
   env_parts = opts[:e].split('=')
-  env_key, env_val = env_parts.size == 2 ? env_parts : ["Environment", env_parts[0]]
+  env_key, env_val = env_parts.size == 2 ? env_parts : ['Environment', env_parts[0]]
   tags[env_key] = env_val
 end
 
@@ -41,12 +45,12 @@ end
 
 args = { tags: tags,
          expect_count: expect_count,
-         "spot-instance-request-id" => spot_instance_request_id }
+         'spot-instance-request-id' => spot_instance_request_id }
 
-client = InstanceSelector::Connection.factory(:aws)
+client = InstanceSelector::Provider.factory(:aws)
 instances = client.instances(args)
 
-instances.each do |k,v|
+instances.each do |k, v|
   print k
   if opts[:v]
     puts "\t#{v.inspect}"
@@ -56,7 +60,8 @@ instances.each do |k,v|
   end
   print "\n"
 
-  # TODO: Convert instances to an object to associate more data with it, and move tagging to method in providers
+  # TODO: Convert instances to an object to associate more data with it,
+  #       and move tagging to method in providers
   # if opts[:t] && i[1].nil? && i[1] != ""
   #   tags = {}
   #   tags["Role"] = opts[:r] if opts[:r]

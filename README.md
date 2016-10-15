@@ -31,9 +31,9 @@ By default, only running instances will be included in the results.  Overriding 
 
 ### Standalone
 
-    require 'instance_selector/connection'
-    conn = InstanceSelector::Connection.factory(:aws)
-    instances = connection.instances(:tags => {"Environment" => "staging", "Role" => "web"})
+    require 'instance_selector/provider'
+    provider = InstanceSelector::Provider.factory(:aws)
+    instances = provider.instances(:tags => {"Environment" => "staging", "Role" => "web"})
 
 ### With Capistrano
 
